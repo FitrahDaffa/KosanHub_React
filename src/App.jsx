@@ -1,42 +1,56 @@
-﻿import { useState } from 'react'
-import { navigation } from './data/data.js'
-import Dashboard from './pages/Dashboard.jsx'
-import DataKamar from './pages/DataKamar.jsx'
-import DataPenghuni from './pages/DataPenghuni.jsx'
-import Pembayaran from './pages/Pembayaran.jsx'
-import Laporan from './pages/Laporan.jsx'
-import './App.css'
+import { useState } from 'react'
 
-function Sidebar({ active, onNavigate }) {
+export default function App() {
+  const [kamar, setKamar] = useState([])
+  const [namaKamar, setNamaKamar] = useState('')
+
+  function tambahKamar(event) {
+    event.preventDefault()
+
+    if (namaKamar.trim() === '') return
+
+    setKamar([...kamar, { id: Date.now(), nama: namaKamar.trim() }])
+    setNamaKamar('')
+  }
+
   return (
-    <aside className="sidebar bg-white border-end d-flex flex-column p-3">
-      <a href="#dashboard" className="brand d-flex align-items-center gap-2 mb-5 text-decoration-none" onClick={() => onNavigate('Dashboard')}>
-        <span className="brand-mark rounded-3 text-white fw-bold d-grid">K</span>
-        <span className="fw-bold text-dark fs-5">Kosan<span className="text-success">Hub</span><small className="d-block text-secondary">PROPERTY MANAGER</small></span>
-      </a>
-      <div className="text-uppercase text-secondary fw-semibold small px-2 mb-2">Menu utama</div>
-      <nav className="nav nav-pills flex-column gap-1" aria-label="Navigasi utama">
-        {navigation.map((item) => <button key={item.label} className={`nav-link text-start ${active === item.label ? 'active' : 'text-secondary'}`} onClick={() => onNavigate(item.label)}><span className="nav-icon me-3">{item.icon}</span>{item.label}</button>)}
-      </nav>
-      <div className="mt-auto">
-        <div className="help-card card border-0 bg-light mb-3"><div className="card-body p-3"><strong className="small">Butuh bantuan?</strong><p className="text-secondary small my-2">Hubungi tim support kami.</p><button className="btn btn-link p-0 text-success text-decoration-none small fw-semibold" onClick={() => window.alert('Hubungi support KosanHub melalui support@kosanhub.id.')}>Hubungi Support â†—</button></div></div>
-        <button className="btn btn-light w-100 text-start text-secondary mb-2" onClick={() => window.alert('Anda telah keluar dari akun demo.')}>â†ªã€€Keluar</button>
-        <div className="d-flex align-items-center gap-2 border-top pt-3"><div className="avatar admin-avatar rounded-circle fw-bold d-grid">AR</div><div><strong className="d-block small">Admin Rumah Kos</strong><span className="text-secondary small">Administrator</span></div></div>
+    <main className="container py-5">
+      <div className="row justify-content-center">
+        <div className="col-md-8 col-lg-6">
+          <div className="card shadow-sm">
+            <div className="card-body p-4">
+              <h1 className="card-title h3 mb-4">Daftar Kamar Kos</h1>
+
+              <form onSubmit={tambahKamar}>
+                <label className="form-label" htmlFor="nama-kamar">Nama kamar</label>
+                <div className="input-group mb-4">
+                  <input
+                    className="form-control"
+                    id="nama-kamar"
+                    type="text"
+                    placeholder="Contoh: Kamar A01"
+                    value={namaKamar}
+                    onChange={(event) => setNamaKamar(event.target.value)}
+                  />
+                  <button className="btn btn-success" type="submit">Tambah</button>
+                </div>
+              </form>
+
+              {kamar.length === 0 ? (
+                <p className="alert alert-secondary mb-0">Belum ada data kamar.</p>
+              ) : (
+                <ul className="list-group">
+                  {kamar.map((item) => (
+                    <li className="list-group-item" key={item.id}>
+                      {item.nama}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </div>
+        </div>
       </div>
-    </aside>
+    </main>
   )
 }
-
-function Topbar() {
-  return <header className="topbar bg-white border-bottom d-flex align-items-center justify-content-between px-4"><div className="small text-secondary">Workspace <span className="mx-2">/</span><strong className="text-dark">Dashboard</strong></div><div className="d-flex align-items-center gap-3"><button className="btn btn-light btn-sm" aria-label="Cari">âŒ•</button><button className="btn btn-light btn-sm position-relative" aria-label="Notifikasi">â™§<span className="notification-dot" /></button><div className="avatar admin-avatar rounded-circle fw-bold d-grid">AR</div><div><strong className="d-block small">Admin Rumah Kos</strong><span className="text-secondary small">Administrator</span></div><span className="text-secondary">âŒ„</span></div></header>
-}
-
-function App() {
-  const [active, setActive] = useState('Dashboard')
-  return <div className="app-shell"><Sidebar active={active} onNavigate={setActive}/><div className="main-column"><Topbar/><main className="main-content container-fluid">{active === 'Dashboard' && <Dashboard/>}{active === 'Data Kamar' && <DataKamar/>}{active === 'Data Penghuni' && <DataPenghuni/>}{active === 'Pembayaran' && <Pembayaran/>}{active === 'Laporan' && <Laporan/>}<footer className="text-center text-secondary small py-4">Â© 2026 KosanHub <span className="px-1">â€¢</span> Kelola kos lebih mudah.</footer></main></div></div>
-}
-
-export default App
-
-
-

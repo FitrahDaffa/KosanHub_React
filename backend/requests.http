@@ -1,0 +1,57 @@
+@baseUrl = http://localhost:3001
+
+### GET semua penghuni
+GET {{baseUrl}}/penghuni
+
+### GET satu penghuni
+GET {{baseUrl}}/penghuni/1
+
+### POST penghuni
+# @name createResident
+POST {{baseUrl}}/penghuni
+Content-Type: application/json
+
+{
+  "name": "Rina Maharani",
+  "room": "C02",
+  "phone": "081234567890",
+  "moveInDate": "2026-11-15",
+  "status": "Active"
+}
+
+### PATCH penghuni yang baru dibuat
+PATCH {{baseUrl}}/penghuni/{{createResident.response.body.id}}
+Content-Type: application/json
+
+{
+  "name": "Rina Maharani Putri",
+  "status": "Leaving"
+}
+
+### DELETE penghuni yang baru dibuat
+DELETE {{baseUrl}}/penghuni/{{createResident.response.body.id}}
+
+### Error validasi DTO
+POST {{baseUrl}}/penghuni
+Content-Type: application/json
+
+{
+  "name": "X",
+  "room": "kamar-1",
+  "phone": "08",
+  "moveInDate": "bukan-tanggal"
+}
+
+### Error konflik: kamar A01 sudah terisi
+POST {{baseUrl}}/penghuni
+Content-Type: application/json
+
+{
+  "name": "Penghuni Duplikat",
+  "room": "A01",
+  "phone": "081234567890",
+  "moveInDate": "2026-11-15"
+}
+
+### Error 404: ID tidak ditemukan
+GET {{baseUrl}}/penghuni/99999

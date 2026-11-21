@@ -1,85 +1,49 @@
 # KosanHub API
 
-Backend REST API terpisah untuk project KosanHub. API memakai NestJS, PostgreSQL, dan Prisma ORM. Backend ini ditambahkan di folder `backend/`; project React di root tidak diubah.
+REST API NestJS dengan PostgreSQL dan Prisma ORM. API memakai port `3001` dan prefix `/api`, termasuk endpoint `/api/penghuni` yang digunakan halaman **Data Penghuni** pada aplikasi React.
 
-## Kebutuhan
+## Menyiapkan database dan menjalankan API
 
-- Node.js 20 atau lebih baru
-- Docker Desktop (atau server PostgreSQL lokal)
-
-## Menjalankan
-
-Dari folder project:
+1. Buat database `kosanhub` di PostgreSQL.
+2. Salin `.env.example` ke `.env` dan sesuaikan `DATABASE_URL` dengan kredensial PostgreSQL lokal.
+3. Jalankan perintah berikut dari folder `backend`:
 
 ```powershell
-cd backend
-Copy-Item .env.example .env
-docker compose up -d postgres
-npm install
-npx prisma migrate dev --name init
-npx prisma generate
-npm run db:seed
-npm run start:dev
+npm.cmd install
+npx.cmd prisma migrate dev --name KosanHub
+npx.cmd prisma generate
+npm.cmd run db:seed
+npm.cmd run start:dev
 ```
 
-API aktif di `http://localhost:3000/api`. Database memakai volume Docker agar isinya tetap ada setelah API atau container direstart. Untuk PostgreSQL lokal tanpa Docker, sesuaikan `DATABASE_URL` di `.env`.
+API tersedia di `http://localhost:3001/api`. Data disimpan permanen di PostgreSQL dan tidak hilang saat server dimulai ulang.
 
-## Halaman KosanHub yang memakai API
+Di terminal kedua, jalankan frontend dari root project dengan `npm.cmd run dev`, lalu buka `http://localhost:5173`. Menu **Data Penghuni** tersambung ke endpoint `/api/penghuni`. Halaman tambahan untuk CRUD kamar, penghuni, pembayaran, filter, dan statistik ada di `http://localhost:5173/kosanhub-api.html`.
 
-Frontend awal tetap utuh. Halaman tambahan yang terhubung langsung ke API tersedia sebagai entry point terpisah. Jalankan Vite dari folder project utama di terminal lain:
-
-```powershell
-cd ..
-npm.cmd run dev
-```
-
-Buka `http://localhost:5173/kosanhub-api.html`. Halaman ini menampilkan ringkasan dari PostgreSQL dan menyediakan tambah, ubah, hapus, serta pencarian untuk kamar, penghuni, dan pembayaran.
-
-Untuk membangun halaman API sebagai output mandiri:
-
-```powershell
-npx.cmd vite build --config vite.kosanhub-api.config.js
-```
-
-Screenshot desktop dan mobile tersimpan di `../screenshots/`.
+Untuk PostgreSQL via Docker, file `docker-compose.yml` menyiapkan PostgreSQL 16 di port `5432` dengan volume persisten. Jika PostgreSQL lokal sudah berjalan, tidak perlu menjalankan Docker Compose.
 
 ## Endpoint
 
-Semua endpoint menerima dan mengembalikan JSON. ID resource adalah UUID.
+Semua endpoint menerima dan mengembalikan JSON; ID resource adalah UUID.
 
 | Method | Endpoint | Keterangan |
 | --- | --- | --- |
-| GET | `/api/rooms` | Daftar kamar; filter opsional `?type=standar` |
-| GET, POST | `/api/rooms/:id`, `/api/rooms` | Detail dan tambah kamar |
-| PATCH, DELETE | `/api/rooms/:id` | Ubah dan hapus kamar |
-| GET | `/api/residents?search=andi` | Daftar/filter penghuni berdasarkan nama, telepon, atau nomor kamar |
-| GET, POST | `/api/residents/:id`, `/api/residents` | Detail dan tambah penghuni |
-| PATCH, DELETE | `/api/residents/:id` | Ubah dan hapus penghuni |
-| GET | `/api/payments?status=LUNAS` | Daftar/filter pembayaran (`LUNAS`, `MENUNGGU`, `TERTUNDA`) |
-| GET, POST | `/api/payments/:id`, `/api/payments` | Detail dan tambah pembayaran |
-| PATCH, DELETE | `/api/payments/:id` | Ubah dan hapus pembayaran |
-| GET | `/api/stats` | Jumlah kamar, penghuni, pembayaran, dan total pembayaran lunas |
+| GET, POST | `/api/penghuni` | Daftar dan tambah penghuni dengan room, tanggal masuk, dan status |
+| GET, PATCH, DELETE | `/api/penghuni/:id` | Baca, ubah, dan hapus penghuni |
+| GET, POST | `/api/rooms` | Daftar/filter dan tambah kamar |
+| GET, PATCH, DELETE | `/api/rooms/:id` | Baca, ubah, dan hapus kamar |
+| GET, POST | `/api/residents` | Daftar/filter dan tambah penghuni relasional |
+| GET, PATCH, DELETE | `/api/residents/:id` | Baca, ubah, dan hapus penghuni |
+| GET, POST | `/api/payments` | Daftar/filter dan tambah pembayaran |
+| GET, PATCH, DELETE | `/api/payments/:id` | Baca, ubah, dan hapus pembayaran |
+| GET | `/api/stats` | Ringkasan jumlah dan total pembayaran lunas |
 
-Contoh tambah kamar:
+Filter: `GET /api/rooms?type=standar`, `GET /api/residents?search=andi`, `GET /api/payments?status=LUNAS`.
 
-```json
-{ "number": "D01", "type": "Standar", "price": 500000 }
-```
+Kamar yang sudah dihuni menghasilkan `409 Conflict`; kamar yang tidak ada menghasilkan `404 Not Found`. Penghuni yang punya riwayat pembayaran tidak bisa dihapus sebelum transaksi tersebut dikelola.
 
-Contoh tambah penghuni (roomId boleh tidak diisi):
+## Migrasi dan data awal
 
-```json
-{ "name": "Fajar Nugraha", "phone": "081234567890", "roomId": "UUID_KAMAR" }
-```
+`prisma/schema.prisma` berisi model `Room`, `Resident`, dan `Payment`. Migrasi tersimpan di `prisma/migrations/`; `npm.cmd run db:seed` mengisi data contoh KosanHub secara idempotent. Request API penghuni tersedia di `requests.http`.
 
-Contoh pembayaran:
-
-```json
-{ "code": "BYR-006", "amount": 500000, "paidAt": "2026-10-06T00:00:00.000Z", "status": "MENUNGGU", "residentId": "UUID_PENGHUNI" }
-```
-
-Validasi request menolak properti yang tidak dikenal dan data yang tidak sesuai. Kamar yang dihapus akan melepaskan penghuni dari kamar; penghuni yang masih memiliki riwayat pembayaran tidak dapat dihapus sebelum pembayaran itu dikelola.
-
-## Skema dan data awal
-
-`prisma/schema.prisma` memuat model `Room`, `Resident`, dan `Payment` beserta relasinya. Jalankan `npx prisma migrate dev --name init` untuk membuat tabel dan menyimpan migrasi. `npm run db:seed` mengisi kamar dan penghuni awal KosanHub secara idempotent.
+Screenshot desktop dan mobile untuk halaman API ada di `../screenshots/`. Panduan screenshot request/response ada di `../docs/screenshots/README.md`.

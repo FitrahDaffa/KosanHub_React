@@ -13,6 +13,11 @@ enum PaymentStatus {
   TERTUNDA
 }
 
+enum ResidentStatus {
+  ACTIVE
+  LEAVING
+}
+
 model Room {
   id        String     @id @default(uuid()) @db.Uuid
   number    String     @unique @db.VarChar(20)
@@ -29,6 +34,8 @@ model Resident {
   id        String    @id @default(uuid()) @db.Uuid
   name      String    @db.VarChar(120)
   phone     String    @db.VarChar(30)
+  moveInDate DateTime  @default(now())
+  status    ResidentStatus @default(ACTIVE)
   roomId    String?   @unique @db.Uuid
   room      Room?     @relation(fields: [roomId], references: [id], onDelete: SetNull)
   payments  Payment[]

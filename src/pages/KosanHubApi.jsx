@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 
-const API = 'http://localhost:3000/api'
+const API = 'http://localhost:3001/api'
 const sections = [
   { id: 'rooms', label: 'Data Kamar', singular: 'Kamar' },
   { id: 'residents', label: 'Data Penghuni', singular: 'Penghuni' },

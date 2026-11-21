@@ -19,10 +19,16 @@ async function main() {
       create: { number: item.number, type: item.type, price: item.price },
     });
     if (item.resident) {
+      const moveInDate = new Date('2026-09-01T00:00:00.000Z');
       const resident = await prisma.resident.upsert({
         where: { roomId: room.id },
-        update: { name: item.resident.name, phone: item.resident.phone },
-        create: { ...item.resident, roomId: room.id },
+        update: {
+          name: item.resident.name,
+          phone: item.resident.phone,
+          moveInDate,
+          status: item.number === 'C01' ? 'LEAVING' : 'ACTIVE',
+        },
+        create: { ...item.resident, roomId: room.id, moveInDate, status: item.number === 'C01' ? 'LEAVING' : 'ACTIVE' },
       });
       const code = `SEED-${item.number}`;
       await prisma.payment.upsert({
